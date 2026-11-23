@@ -9,6 +9,7 @@ import { useLocale } from "./locale-provider.tsx";
 
 const rangeLabels = { "1h": "range1h", "24h": "range24h", "7d": "range7d" } as const;
 const ranges = Object.keys(historyRanges) as HistoryRange[];
+const sampleSlots = 24;
 
 export function HealthBadge({ health, label }: { health: Monitor["state"]; label?: string }) {
   const { t } = useLocale();
@@ -20,9 +21,11 @@ export function SampleStrip({ samples, compact = false }: { samples: Probe[]; co
   const label = `${t.checks} · ${number.format(samples.length)} · ${t.failedChecks} ${number.format(samples.filter((sample) => !sample.ok).length)}`;
   return <span className={`heartbeat${compact ? " compact" : ""}`} role={compact ? undefined : "img"}
     aria-hidden={compact || undefined} aria-label={compact ? undefined : label}>
-    {Array.from({ length: 24 }, (_, index) => {
-      const sample = samples[23 - index];
-      return <span key={index} className={`probe-slot${sample ? sample.ok ? " ok" : " bad" : ""}`}
+    {Array.from({ length: sampleSlots }, (_, index) => {
+      const sample = samples[sampleSlots - 1 - index];
+      const state = sample ? sample.ok ? "ok" : "bad" : "missing";
+      const latest = !compact && index === sampleSlots - 1 && sample;
+      return <span key={latest ? latest.at : index} className={`probe-slot ${state}${latest ? " latest" : ""}`}
         title={sample && !compact ? `${time.format(new Date(sample.at))} · ${number.format(sample.latency)} ms · ${detail(sample.reason)}` : undefined} />;
     })}
   </span>;
@@ -112,8 +115,11 @@ export function MonitorDetail({ monitor, service, historyVersion, onEdit }: {
       </section>
       <section className="panel checks-panel" aria-labelledby="checks-heading">
         <div className="panel-heading"><h2 id="checks-heading">{t.recentChecks}</h2>
-          <div className="check-legend"><span className="signal-dot healthy" />{t.ok}<span className="signal-dot down" />{t.failed}
-            <span className="signal-dot waiting" />{t.noData}</div>
+          <div className="check-legend">
+            <span><i className="probe-key ok" aria-hidden="true" />{t.ok}</span>
+            <span><i className="probe-key bad" aria-hidden="true" />{t.failed}</span>
+            <span><i className="probe-key missing" aria-hidden="true" />{t.noData}</span>
+          </div>
         </div>
         <SampleStrip samples={samples} />
         <div className="signal-axis"><span>{oldest ? dateTime(oldest.at) : t.noCheck}</span>

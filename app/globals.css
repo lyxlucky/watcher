@@ -194,15 +194,58 @@
   .chart-point { fill: var(--focus); }
   .chart-ticks { grid-area: 2 / 1; display: flex; justify-content: space-between; gap: 4px; padding-top: 9px; }
   .chart-empty { min-height: 218px; justify-content: center; }
-  .check-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; color: var(--muted); font-size: .75rem; }
-  .check-legend .signal-dot:not(:first-child) { margin-inline-start: 5px; }
-  .check-legend .signal-dot.waiting { background: var(--tick-empty); }
-  .heartbeat { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: clamp(2px, .32vw, 5px); }
-  .probe-slot { display: block; height: 22px; border-radius: 4px; background: var(--tick-empty); }
-  .probe-slot.ok { background: var(--tick-good); }
-  .probe-slot.bad { background: var(--tick-bad); }
-  .compact .probe-slot { height: 9px; border-radius: 2px; }
-  .heartbeat.compact { gap: 2px; }
+  .check-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: .75rem; }
+  .check-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+  .heartbeat {
+    --beat-width: clamp(4px, .7vw, 10px);
+    --beat-height: clamp(18px, 2.5vw, 36px);
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    place-items: center;
+    min-height: calc(var(--beat-height) + 20px);
+    padding-inline: 10px;
+    border: 1px solid var(--divider);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--inset) 65%, var(--surface));
+    box-shadow: inset 0 1px 3px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .heartbeat::before {
+    content: "";
+    position: absolute;
+    inset-inline: 10px;
+    top: 50%;
+    z-index: -1;
+    border-top: 1px dashed var(--divider);
+  }
+  .heartbeat.compact { --beat-width: 4px; --beat-height: 12px; min-height: 22px; padding-inline: 5px; border-radius: 8px; }
+  .heartbeat.compact::before { inset-inline: 5px; }
+  .probe-slot, .probe-key {
+    --beat-color: color-mix(in srgb, var(--tick-empty) 34%, var(--muted));
+    position: relative;
+    display: block;
+    width: min(var(--beat-width), 56%);
+    height: var(--beat-height);
+    border-radius: 999px;
+    color: var(--beat-color);
+    background: currentColor;
+  }
+  :is(.probe-slot, .probe-key).ok { --beat-color: color-mix(in srgb, var(--tick-good) 86%, var(--good)); }
+  :is(.probe-slot, .probe-key).bad { --beat-color: var(--tick-bad); height: calc(var(--beat-height) * .78); }
+  :is(.probe-slot, .probe-key).bad::before {
+    content: "";
+    position: absolute;
+    inset-inline: 25%;
+    top: 50%;
+    height: 1px;
+    border-radius: inherit;
+    background: var(--solid);
+  }
+  :is(.probe-slot, .probe-key).missing { width: min(var(--beat-width), 44%, 6px); height: auto; aspect-ratio: 1; }
+  .probe-key { --beat-width: 6px; --beat-height: 13px; width: var(--beat-width); }
+  .probe-key.missing { width: var(--beat-width); }
+  .probe-slot.latest { outline: 1px solid currentColor; outline-offset: 2px; }
   .signal-axis { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px 12px; margin-block: 7px 2px; color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
   .probe-details summary { display: flex; align-items: center; gap: 6px; min-height: 44px; width: fit-content; list-style: none; color: var(--link); font-size: .85rem; font-weight: 650; }
   .probe-details[open] summary svg, .incident[open] .incident-chevron { rotate: 180deg; }
@@ -295,7 +338,6 @@
   .monitor-link[aria-current] { border-color: var(--edge); background: var(--surface); }
   .monitor-line strong { font-size: 1rem; }
   .monitor-chevron { display: block; color: var(--muted); }
-  .heartbeat.compact { max-width: 240px; }
   .monitor-workspace { display: none; }
   .monitor-layout[data-detail=true] .monitor-directory { display: none; }
   .monitor-layout[data-detail=true] .monitor-workspace { display: grid; gap: 12px; }
@@ -323,4 +365,21 @@
 
 @media (prefers-reduced-transparency: reduce) {
   .app-shell :is(.mast, .panel, .glass-dock, .account-popover, .sheet, .mobile-summary) { background: var(--solid); backdrop-filter: none; }
+}
+
+@keyframes probe-arrival {
+  from { transform: scale(1); opacity: .8; }
+  to { transform: scale(1.65, 1.35); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .probe-slot.latest::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 1px solid currentColor;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: probe-arrival 550ms cubic-bezier(.18, .7, .28, 1) both;
+  }
 }

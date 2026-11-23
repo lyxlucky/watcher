@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "daemons": {
+    "watcher": {
+      "root": "worker/",
+      "entrypoint": "Dockerfile",
+      "instances": { "iad1": 1 },
+      "resources": { "requests": { "memory": "1Gi" } },
+      "livenessProbe": { "httpGet": { "port": 8080, "path": "/health" }, "initialDelaySeconds": 5 }
+    }
+  }
+}

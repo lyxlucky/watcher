@@ -1,0 +1,15 @@
+{
+  "name": "watcher-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "dependencies": {
+    "ipaddr.js": "^2.2.0",
+    "nodemailer": "^10.6.1",
+    "postgres": "^3.4.7",
+    "undici": "^7.0.0"
+  }
+}
